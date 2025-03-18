@@ -1,8 +1,6 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <vector>
-
 using namespace std;
 
 struct Student {
@@ -13,7 +11,9 @@ struct Student {
     double gpa;
 };
 
-vector<Student> students;  // Dynamic student list
+const int MAX_STUDENTS = 100;
+Student students[MAX_STUDENTS];
+int studentCount = 0;
 
 void addStudent();
 void editStudent();
@@ -24,19 +24,11 @@ int findStudentById(int id);
 
 int main() {
     int choice;
-    
-    while (true) {
+    do {
         displayMenu();
         cout << "Enter your choice: ";
-        
-        if (!(cin >> choice)) {  // Input validation
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Invalid input! Please enter a number.\n";
-            continue;
-        }
-
-        cin.ignore();  // Clear newline after number input
+        cin >> choice;
+        cin.ignore();
 
         switch (choice) {
             case 1: addStudent(); break;
@@ -46,59 +38,53 @@ int main() {
             case 5: cout << "Exiting program...\n"; return 0;
             default: cout << "Invalid option! Please try again.\n"; break;
         }
-    }
-
+    } while (true);
     return 0;
 }
 
 void displayMenu() {
-    cout << "\n====== Student Management System ======\n";
+    cout << "\nMenu:\n";
     cout << "[1] Add Student\n";
     cout << "[2] Edit Student\n";
     cout << "[3] Delete Student\n";
     cout << "[4] View Students\n";
     cout << "[5] Exit Program\n";
-    cout << "=======================================\n";
 }
 
 void addStudent() {
-    Student s;
-
-    cout << "Enter Student ID: ";
-    while (!(cin >> s.id)) {  // Validate integer input
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Invalid ID! Enter a valid number: ";
-    }
-    cin.ignore();
-
-    if (findStudentById(s.id) != -1) {
-        cout << "Error: Student ID already exists!\n";
+    if (studentCount >= MAX_STUDENTS) {
+        cout << "Student record is full!\n";
         return;
     }
 
-    cout << "Enter First Name: ";
-    getline(cin, s.firstName);
-    cout << "Enter Last Name: ";
-    getline(cin, s.lastName);
-    cout << "Enter Course: ";
-    getline(cin, s.course);
-
-    cout << "Enter GPA: ";
-    while (!(cin >> s.gpa)) {  // Validate GPA input
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Invalid GPA! Enter a valid number: ";
-    }
+    int id;
+    cout << "Enter Student ID: ";
+    cin >> id;
     cin.ignore();
 
-    students.push_back(s);
+    if (findStudentById(id) != -1) {
+        cout << "Duplicate ID!\n";
+        return;
+    }
+
+    students[studentCount].id = id;
+    cout << "Enter First Name: ";
+    getline(cin, students[studentCount].firstName);
+    cout << "Enter Last Name: ";
+    getline(cin, students[studentCount].lastName);
+    cout << "Enter Course: ";
+    getline(cin, students[studentCount].course);
+    cout << "Enter GPA: ";
+    cin >> students[studentCount].gpa;
+    cin.ignore();
+
+    studentCount++;
     cout << "Student added successfully!\n";
 }
 
 void editStudent() {
-    if (students.empty()) {
-        cout << "No student records available!\n";
+    if (studentCount == 0) {
+        cout << "No records available!\n";
         return;
     }
 
@@ -119,21 +105,16 @@ void editStudent() {
     getline(cin, students[index].lastName);
     cout << "Enter New Course: ";
     getline(cin, students[index].course);
-
     cout << "Enter New GPA: ";
-    while (!(cin >> students[index].gpa)) {  // Validate GPA input
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Invalid GPA! Enter a valid number: ";
-    }
+    cin >> students[index].gpa;
     cin.ignore();
 
     cout << "Student data updated!\n";
 }
 
 void deleteStudent() {
-    if (students.empty()) {
-        cout << "No student records available!\n";
+    if (studentCount == 0) {
+        cout << "No records available!\n";
         return;
     }
 
@@ -148,32 +129,33 @@ void deleteStudent() {
         return;
     }
 
-    students.erase(students.begin() + index);
+    for (int i = index; i < studentCount - 1; i++) {
+        students[i] = students[i + 1];
+    }
+    studentCount--;
     cout << "Student deleted successfully!\n";
 }
 
 void viewStudents() {
-    if (students.empty()) {
-        cout << "No student records available!\n";
+    if (studentCount == 0) {
+        cout << "No records to display!\n";
         return;
     }
 
-    cout << "\n======================================== Student Records =======================================\n";
-    cout << left << setw(10) << "ID" << setw(15) << "First Name" << setw(15) << "Last Name" 
-         << setw(15) << "Course" << setw(6) << "GPA" << "\n";
-    cout << string(70, '-') << "\n";
-
-    for (const auto& s : students) {
-        cout << left << setw(10) << s.id
-             << setw(15) << s.firstName
-             << setw(15) << s.lastName
-             << setw(15) << s.course
-             << setw(6) << fixed << setprecision(2) << s.gpa << "\n";
+    cout << "\nStudent Records:\n";
+    cout << left << setw(10) << "ID" << setw(15) << "First Name" << setw(15) << "Last Name" << setw(15) << "Course" << setw(6) << "GPA" << "\n";
+    cout << string(60, '-') << "\n";
+    for (int i = 0; i < studentCount; i++) {
+        cout << left << setw(10) << students[i].id
+             << setw(15) << students[i].firstName
+             << setw(15) << students[i].lastName
+             << setw(15) << students[i].course
+             << setw(6) << fixed << setprecision(2) << students[i].gpa << "\n";
     }
 }
 
 int findStudentById(int id) {
-    for (size_t i = 0; i < students.size(); i++) {
+    for (int i = 0; i < studentCount; i++) {
         if (students[i].id == id) {
             return i;
         }
